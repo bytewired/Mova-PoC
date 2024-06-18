@@ -78,6 +78,8 @@
     "tuple": "cpp",
     "typeinfo": "cpp",
     "algorithm": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "iostream": "cpp",
+    "string": "cpp"
   }
 }

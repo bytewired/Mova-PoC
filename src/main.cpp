@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "serializer.h"
 #include "vm.h"
 #include <iostream>
 #include <string>
