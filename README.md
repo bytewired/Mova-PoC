@@ -46,7 +46,11 @@ loop:
 | VM | Program executor |
 | State Serializator  | Serializes/Deserializes program state (Instruction Pointer, Stack) 
 ## Hypervisor Listener
-Opens socket on port 34567 and listens to incomming commands
+Each program is a socket server and Hypervisor is a client that binds to server(s).
+
+Hypervisor component into VM listens to incomming clients.
+
+Socket port for server is calculated based on this `[PID]^34567`.
 
 Supported commands:
 | Command | Description |

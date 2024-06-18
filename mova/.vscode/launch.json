@@ -20,7 +20,7 @@
       "request": "launch",
       "args": [],
       "cwd": "/Users/mykola/Projects/mova_poc",
-      "program": "/Users/mykola/Projects/mova_poc/build/Debug/outDebug"
+      "program": "/Users/mykola/Projects/mova_poc/mova/build/main"
     }
   ]
 }

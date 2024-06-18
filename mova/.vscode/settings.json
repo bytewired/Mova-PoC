@@ -80,6 +80,22 @@
     "algorithm": "cpp",
     "stack": "cpp",
     "iostream": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "__locale": "cpp",
+    "bitset": "cpp",
+    "cstdio": "cpp",
+    "ctime": "cpp",
+    "cwctype": "cpp",
+    "ios": "cpp",
+    "istream": "cpp",
+    "locale": "cpp",
+    "ostream": "cpp",
+    "streambuf": "cpp",
+    "string_view": "cpp",
+    "__hash_table": "cpp",
+    "array": "cpp",
+    "type_traits": "cpp",
+    "ratio": "cpp",
+    "variant": "cpp"
   }
 }
