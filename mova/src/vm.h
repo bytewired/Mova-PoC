@@ -12,7 +12,7 @@
 struct VM {
   std::vector<Instruction> instrs;
   std::stack<int32_t> stack = std::stack<int>();
-  std::atomic<bool> is_interruppted = false;
+  std::atomic_bool is_interruppted = false;
   uint32_t ip = 0;
 
   VM(std::vector<Instruction> instrs) { this->instrs = instrs; }
@@ -23,7 +23,7 @@ struct VM {
 
 void VM::run() {
   while (ip < instrs.size()) {
-    if (is_interruppted) {
+    if (is_interruppted.load()) {
       std::cout << "Process was interrupted" << std::endl;
       while (is_interruppted) {
       } // block execution
@@ -48,6 +48,7 @@ void VM::run() {
       ip -= get_int32_value(instr);
       break;
     case PRINT:
+      // Silent print
       std::cout << stack.top() << std::endl;
       ip++;
       break;

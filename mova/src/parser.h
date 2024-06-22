@@ -1,28 +1,11 @@
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
+#include "../../shared/shared_utils.h"
 #include "instruction.h"
 #include <stdint.h>
 #include <string>
 #include <vector>
-
-std::vector<std::string> split(const std::string &str, const char delimeter) {
-  std::vector<std::string> words;
-  std::string acc;
-
-  for (char c : str) {
-    if (c == delimeter) {
-      words.push_back(acc);
-      acc = "";
-    } else {
-      acc += c;
-    }
-  }
-
-  words.push_back(acc);
-
-  return words;
-}
 
 std::vector<Instruction> parse_source_code(const std::string &src) {
   std::vector<Instruction> instrs;

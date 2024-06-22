@@ -30,13 +30,13 @@ int32_t read_int32_t(const std::vector<uint8_t> &data, uint32_t index) {
          data[index + 3];
 }
 
-std::vector<uint8_t> serialize(const VM &vm) {
+std::vector<uint8_t> serialize(const VM *vm) {
   std::vector<uint8_t> data = std::vector<uint8_t>();
 
   write_uint16_t(data, STACK_HEADER);
-  write_uint16_t(data, vm.stack.size());
+  write_uint16_t(data, vm->stack.size());
 
-  std::stack<int32_t> stack_copy = vm.stack;
+  std::stack<int32_t> stack_copy = vm->stack;
 
   while (stack_copy.size() > 0) {
     write_int32_t(data, stack_copy.top());
@@ -44,12 +44,12 @@ std::vector<uint8_t> serialize(const VM &vm) {
   }
 
   write_uint16_t(data, IP_HEADER);
-  write_int32_t(data, vm.ip);
+  write_int32_t(data, vm->ip);
 
   return data;
 }
 
-void deserialize(const std::vector<uint8_t> &data, VM &vm) {
+void deserialize(const std::vector<uint8_t> &data, VM *vm) {
   uint32_t i = 0;
 
   std::stack<int32_t> stack = std::stack<int32_t>();
@@ -78,6 +78,6 @@ void deserialize(const std::vector<uint8_t> &data, VM &vm) {
     }
   }
 
-  vm.overwrite_state(stack, ip);
+  vm->overwrite_state(stack, ip);
 }
 #endif

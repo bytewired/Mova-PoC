@@ -14,7 +14,9 @@ int main(int argc, char **argv) {
 
   std::cout << "\nRunning Hypervisor server..." << std::endl;
   VM *vm = new VM(result);
-  run_hypervisor_server(vm);
+
+  HypervisorListener *listener = new HypervisorListener(vm);
+  listener->start();
 
   std::cout << "\nRunning program...\n" << std::endl;
   vm->run();
