@@ -58,7 +58,7 @@ void run_cli() {
     } else if (cmd == "wstate") {
       if (params.size() == 3) {
         int32_t from_pid = std::stoi(params[1]);
-        int32_t to_pid = std::stoi(params[1]);
+        int32_t to_pid = std::stoi(params[2]);
 
         auto from_client = clients.find(from_pid);
         auto to_client = clients.find(to_pid);
@@ -93,7 +93,7 @@ void run_cli() {
         if (pipe.has_value()) {
           auto client = clients.find(pid);
           if (client == clients.end()) {
-            std::cout << "Not bound to " << pid << "\n"
+            std::cout << "Not bound to " << pid << "\n";
           } else {
             client->second->execute(
                 HCommands::READ_STATE, std::vector<byte>(),

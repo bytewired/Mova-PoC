@@ -18,6 +18,7 @@ void signal_handler(int32_t signum) {
 int main(int argc, char **argv) {
   signal(SIGINT, signal_handler);
 
+  std::cout << "My PID: " << getpid() << std::endl;
   std::cout << "Parsing..." << std::endl;
   std::vector<Instruction> result = parse_source_code(INPUT);
   std::cout << "Completed." << std::endl;
