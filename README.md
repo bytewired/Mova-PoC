@@ -89,6 +89,7 @@ Assume that both VMs runs the same version of the same program.
 | Command | Description |
 | ------- | ----------- |
 | ps | get list of processes that runs Mova VM |
-| interrupt [PID] | interrupt VM with PID (VM runs into Interrupted Mode and listens for commands) |
-| sstate | save state (receive byte array with VM state) |
-| rstate | restore state (send to PID byte array with VM state) |
+| bind <`PID`> | bind to program's socket
+| unbind <`PID`> | unbind from program's socket
+| rstate <`PID`>| read state from program |
+| wstate <`PID from`> <`PID to`> | take state from one program that was fetched by `rstate` and send to another program |
