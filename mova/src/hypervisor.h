@@ -18,9 +18,12 @@ struct HypervisorListener {
 public:
   HypervisorListener(VM *vm) : vm(vm){};
   void start();
+  void stop();
 
 private:
   VM *vm;
+  Pipe pipe;
+  std::thread t;
 
   std::vector<byte> listener_callback(std::vector<byte> data);
   void create();
@@ -32,29 +35,32 @@ HypervisorListener::listener_callback(std::vector<byte> data) {
   if (!data.empty()) {
     std::cout << "[" << getpid() << "] Received data: ";
     print_bytes_as_hex(data.data(), data.size());
+  } else {
+    return std::vector<byte>();
   }
 
-  if (data.size() == 1) {
-    switch (data[0]) {
-    case HCommands::READ_STATE: {
-      vm->is_interruppted = true;
-      std::vector<uint8_t> state = serialize(vm);
-      vm->is_interruppted = false;
-      return state;
-    }
-    case HCommands::WRITE_STATE: {
-      vm->is_interruppted = true;
-      deserialize(data, vm);
-      vm->is_interruppted = false;
-    }
-    }
+  switch (data[0]) {
+  case HCommands::READ_STATE: {
+    vm->is_interruppted = true;
+    std::vector<uint8_t> state = serialize(vm);
+    vm->is_interruppted = false;
+    std::cout << "State read" << std::endl;
+    return state;
+  }
+  case HCommands::WRITE_STATE: {
+    vm->is_interruppted = true;
+    auto body = std::vector(&data[1], &data[data.size()]);
+    deserialize(body, vm);
+    vm->is_interruppted = false;
+    std::cout << "State written" << std::endl;
+  }
   }
 
   return std::vector<byte>();
 }
 
 void HypervisorListener::create() {
-  Pipe pipe = create_pipe();
+  pipe = create_pipe();
 
   listen(pipe);
 }
@@ -78,16 +84,15 @@ void HypervisorListener::listen(const Pipe &pipe) {
   while (1) {
     ssize_t bytes_read = read(read_fd, buffer, sizeof(buffer));
     if (bytes_read > 0) {
-      buffer[bytes_read] = '\0';
-      std::cout << "Received: ";
-      print_bytes_as_hex(buffer, bytes_read);
-      read_data.insert(read_data.end(), &buffer[0], &buffer[bytes_read - 1]);
+      read_data.insert(read_data.end(), &buffer[0], &buffer[bytes_read]);
     } else if (!read_data.empty()) {
       std::vector<byte> response = listener_callback(read_data);
       if (!response.empty()) {
         const void *response_ptr = response.data();
         write(write_fd, response_ptr, response.size());
-        std::cout << "Sent data" << std::endl;
+        std::cout << "Sent data: ";
+        print_bytes_as_hex(response.data(), response.size());
+        std::cout << std::endl;
       }
 
       read_data.clear();
@@ -99,8 +104,13 @@ void HypervisorListener::listen(const Pipe &pipe) {
 }
 
 void HypervisorListener::start() {
-  std::thread t([this] { create(); });
+  t = std::thread([this] { create(); });
   t.detach();
+}
+
+void HypervisorListener::stop() {
+  unlink(pipe.pipe_reading_path.c_str());
+  unlink(pipe.pipe_writing_path.c_str());
 }
 
 #endif

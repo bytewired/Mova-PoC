@@ -6,8 +6,18 @@
 #include <string>
 
 const std::string INPUT = "put 0 add 1 print sleep 1000 goto 3";
+HypervisorListener *listener = nullptr;
+
+void signal_handler(int32_t signum) {
+  if (listener != nullptr)
+    listener->stop();
+
+  exit(signum);
+}
 
 int main(int argc, char **argv) {
+  signal(SIGINT, signal_handler);
+
   std::cout << "Parsing..." << std::endl;
   std::vector<Instruction> result = parse_source_code(INPUT);
   std::cout << "Completed." << std::endl;
@@ -15,7 +25,7 @@ int main(int argc, char **argv) {
   std::cout << "\nRunning Hypervisor server..." << std::endl;
   VM *vm = new VM(result);
 
-  HypervisorListener *listener = new HypervisorListener(vm);
+  listener = new HypervisorListener(vm);
   listener->start();
 
   std::cout << "\nRunning program...\n" << std::endl;

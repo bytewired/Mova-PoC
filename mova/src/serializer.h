@@ -38,7 +38,7 @@ std::vector<uint8_t> serialize(const VM *vm) {
 
   std::stack<int32_t> stack_copy = vm->stack;
 
-  while (stack_copy.size() > 0) {
+  while (!stack_copy.empty()) {
     write_int32_t(data, stack_copy.top());
     stack_copy.pop();
   }
@@ -66,12 +66,13 @@ void deserialize(const std::vector<uint8_t> &data, VM *vm) {
       i += 2;
 
       for (uint16_t j = 0; j < stack_size; j++) {
-        stack.push(read_int32_t(data, j));
+        stack.push(read_int32_t(data, i));
         i += 4;
       }
     } else {
       uint16_t ip_header = read_uint16_t(data, i);
       assert(ip_header == IP_HEADER);
+      i += 2;
 
       ip = read_int32_t(data, i);
       i += 4;

@@ -43,24 +43,31 @@ Pipe create_pipe() {
 std::vector<byte> read_from(int32_t read_fd) {
   char buffer[1024];
   std::vector<byte> data = std::vector<byte>();
+  bool is_start_reading = false;
 
   while (1) {
     ssize_t bytes_read = read(read_fd, buffer, sizeof(buffer));
     if (bytes_read > 0) {
-      buffer[bytes_read] = '\0';
-      std::cout << "Received: " << buffer << std::endl;
-      data.insert(data.end(), &buffer[0], &buffer[bytes_read - 1]);
+      data.insert(data.end(), &buffer[0], &buffer[bytes_read]);
+      is_start_reading = true;
+    } else if (!is_start_reading) {
+      // wait for incoming data
+      continue;
     } else {
       break;
     }
   }
 
+  std::cout << "Received: ";
+  print_bytes_as_hex(data.data(), data.size());
+  std::cout << std::endl;
+
   return data;
 }
 
-void write_cmd(int32_t write_fd, HCommands cmd) {
+void write_cmd(int32_t fd, HCommands cmd) {
   byte ccmd = static_cast<byte>(cmd);
-  write(write_fd, &ccmd, sizeof(byte));
+  write(fd, &ccmd, sizeof(byte));
 }
 
 void write_data(int32_t fd, std::vector<byte> data) {
