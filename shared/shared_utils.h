@@ -2,26 +2,21 @@
 #define __SHARED_UTILS_H__
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 typedef uint8_t byte;
 
 std::vector<std::string> split(const std::string &str, const char delimeter) {
-  std::vector<std::string> words;
-  std::string acc;
+  std::stringstream stream;
+  std::vector<std::string> tokens;
+  std::string token;
 
-  for (char c : str) {
-    if (c == delimeter) {
-      words.push_back(acc);
-      acc = "";
-    } else {
-      acc += c;
-    }
+  while (getline(stream, token, delimeter)) {
+    tokens.push_back(token);
   }
 
-  words.push_back(acc);
-
-  return words;
+  return tokens;
 }
 
 void print_bytes_as_hex(byte *array, size_t size) {

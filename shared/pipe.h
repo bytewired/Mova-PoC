@@ -1,5 +1,5 @@
-#ifndef __HYPERVISOR_COMMUNICATION_H__
-#define __HYPERVISOR_COMMUNICATION_H__
+#ifndef __PIPE__
+#define __PIPE__
 
 #include "shared_utils.h"
 #include <csignal>
@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <vector>
 
-const uint16_t PIPE_PREFIX = 0x616E;
+static const uint16_t PIPE_PREFIX = 0x616E;
 
 /**
  * Pipe file name for reading: <PIPE_PREFIX>_<PID>_0
@@ -23,14 +23,22 @@ struct Pipe {
   std::string pipe_writing_path;
 };
 
-enum HCommands { READ_STATE = 0x12, WRITE_STATE = 0x13 };
+enum Command { READ_STATE = 0x12, WRITE_STATE = 0x13 };
+
+std::string get_writing_path(const std::string &prefix, int32_t pid) {
+  return "/tmp/" + std::to_string(PIPE_PREFIX) + "_" + std::to_string(pid) +
+         "_1";
+}
+
+std::string get_reading_path(const std::string &prefix, int32_t pid) {
+  return "/tmp/" + std::to_string(PIPE_PREFIX) + "_" + std::to_string(pid) +
+         "_0";
+}
 
 Pipe create_pipe() {
   int32_t pid = getpid();
-  std::string reading_path =
-      "/tmp/" + std::to_string(PIPE_PREFIX) + "_" + std::to_string(pid) + "_0";
-  std::string writing_path =
-      "/tmp/" + std::to_string(PIPE_PREFIX) + "_" + std::to_string(pid) + "_1";
+  std::string reading_path = get_reading_path(std::to_string(PIPE_PREFIX), pid);
+  std::string writing_path = get_writing_path(std::to_string(PIPE_PREFIX), pid);
 
   mkfifo(reading_path.c_str(), 0666);
   mkfifo(writing_path.c_str(), 0666);
@@ -40,17 +48,22 @@ Pipe create_pipe() {
               .pipe_writing_path = writing_path};
 }
 
+/*
+ * Reads data from Pipe.
+ *
+ * Functions blocks thread.
+ */
 std::vector<byte> read_from(int32_t read_fd) {
   char buffer[1024];
   std::vector<byte> data = std::vector<byte>();
-  bool is_start_reading = false;
+  bool is_started = false;
 
   while (1) {
     ssize_t bytes_read = read(read_fd, buffer, sizeof(buffer));
     if (bytes_read > 0) {
       data.insert(data.end(), &buffer[0], &buffer[bytes_read]);
-      is_start_reading = true;
-    } else if (!is_start_reading) {
+      is_started = true;
+    } else if (!is_started) {
       // wait for incoming data
       continue;
     } else {
@@ -65,12 +78,12 @@ std::vector<byte> read_from(int32_t read_fd) {
   return data;
 }
 
-void write_cmd(int32_t fd, HCommands cmd) {
+void send_cmd(int32_t fd, Command cmd) {
   byte ccmd = static_cast<byte>(cmd);
   write(fd, &ccmd, sizeof(byte));
 }
 
-void write_data(int32_t fd, std::vector<byte> data) {
+void send_data(int32_t fd, std::vector<byte> data) {
   write(fd, data.data(), data.size());
 }
 #endif

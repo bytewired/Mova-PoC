@@ -20,8 +20,8 @@ std::optional<Pipe> find_pipe(int32_t pid) {
 void run_cli() {
   std::string input;
   std::vector<byte> data;
-  std::unordered_map<int32_t, HypervisorClient *> clients =
-      std::unordered_map<int32_t, HypervisorClient *>();
+  std::unordered_map<int32_t, Client *> clients =
+      std::unordered_map<int32_t, Client *>();
 
   while (1) {
     std::cout << "> ";
@@ -46,7 +46,7 @@ void run_cli() {
         int32_t pid = std::stoi(params[1]);
         std::optional<Pipe> pipe = find_pipe(pid);
         if (pipe.has_value()) {
-          auto client = new HypervisorClient(pipe.value());
+          auto client = new Client(pipe.value());
           client->bind();
           clients.insert(std::pair(pid, client));
         } else {
@@ -72,14 +72,14 @@ void run_cli() {
 
         if (to_client == clients.end()) {
           std::cout << "Could not find client " << to_pid
-                    << ". Call bind before write state\n";
+                    << ". Call bind before writing state\n";
           continue;
         }
 
-        to_client->second->execute(HCommands::WRITE_STATE,
+        to_client->second->execute(Command::WRITE_STATE,
                                    from_client->second->saved_state,
                                    [](std::vector<byte> response) -> void {
-                                     std::cout << "State written\n";
+                                     std::cout << "State has written\n";
                                    });
       } else {
         std::cout << "Need to pass PIDs for this command: wstate <PID from> "
@@ -96,7 +96,7 @@ void run_cli() {
             std::cout << "Not bound to " << pid << "\n";
           } else {
             client->second->execute(
-                HCommands::READ_STATE, std::vector<byte>(),
+                Command::READ_STATE, std::vector<byte>(),
                 [client](std::vector<byte> response) -> void {
                   client->second->saved_state = response;
                 });

@@ -1,7 +1,7 @@
 #ifndef __HYPERVISOR_H__
 #define __HYPERVISOR_H__
 
-#include "../../shared/hypervisor_communication.h"
+#include "../../shared/pipe.h"
 #include <chrono>
 #include <csignal>
 #include <fcntl.h>
@@ -35,8 +35,8 @@ std::vector<Pipe> get_named_pipes() {
 
       pids.push_back(pid);
 
-      std::string reading_path = "/tmp/" + prefix + "_" + pid + "_0";
-      std::string writing_path = "/tmp/" + prefix + "_" + pid + "_1";
+      std::string reading_path = get_reading_path(prefix, std::stoi(pid));
+      std::string writing_path = get_writing_path(prefix, std::stoi(pid));
 
       pipes.push_back(Pipe{.pid = std::stoi(pid),
                            .pipe_reading_path = reading_path,
@@ -47,12 +47,12 @@ std::vector<Pipe> get_named_pipes() {
   return pipes;
 }
 
-struct HypervisorClient {
-  HypervisorClient(Pipe pipe) : pipe(pipe){};
+struct Client {
+  Client(Pipe pipe) : pipe(pipe){};
 
   std::vector<byte> saved_state;
   void bind();
-  void execute(HCommands cmd, std::vector<byte> data,
+  void execute(Command cmd, std::vector<byte> data,
                std::function<void(std::vector<byte>)> callback);
   void terminate();
 
@@ -63,7 +63,7 @@ private:
   int32_t read_fd;
 };
 
-void HypervisorClient::bind() {
+void Client::bind() {
   read_fd = open(pipe.pipe_reading_path.c_str(), O_RDONLY | O_NONBLOCK);
   write_fd = open(pipe.pipe_writing_path.c_str(), O_WRONLY);
 
@@ -75,25 +75,24 @@ void HypervisorClient::bind() {
   }
 }
 
-void HypervisorClient::execute(
-    HCommands cmd, std::vector<byte> data,
-    std::function<void(std::vector<byte>)> callback) {
+void Client::execute(Command cmd, std::vector<byte> data,
+                     std::function<void(std::vector<byte>)> callback) {
   switch (cmd) {
-  case HCommands::READ_STATE: {
-    write_cmd(write_fd, cmd);
+  case Command::READ_STATE: {
+    send_cmd(write_fd, cmd);
     callback(read_from(read_fd));
     break;
   }
-  case HCommands::WRITE_STATE: {
-    write_cmd(write_fd, cmd);
-    write_data(write_fd, data);
+  case Command::WRITE_STATE: {
+    send_cmd(write_fd, cmd);
+    send_data(write_fd, data);
     callback(std::vector<byte>());
     break;
   }
   }
 }
 
-void HypervisorClient::terminate() {
+void Client::terminate() {
   pthread_cancel(t.native_handle());
   close(write_fd);
   close(read_fd);

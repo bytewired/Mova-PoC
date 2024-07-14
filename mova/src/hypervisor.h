@@ -1,7 +1,7 @@
 #ifndef __HYPERVISOR_H__
 #define __HYPERVISOR_H__
 
-#include "../../shared/hypervisor_communication.h"
+#include "../../shared/pipe.h"
 #include "serializer.h"
 #include "vm.h"
 #include <chrono>
@@ -40,14 +40,14 @@ HypervisorListener::listener_callback(std::vector<byte> data) {
   }
 
   switch (data[0]) {
-  case HCommands::READ_STATE: {
+  case Command::READ_STATE: {
     vm->is_interruppted = true;
     std::vector<uint8_t> state = serialize(vm);
     vm->is_interruppted = false;
     std::cout << "State read" << std::endl;
     return state;
   }
-  case HCommands::WRITE_STATE: {
+  case Command::WRITE_STATE: {
     vm->is_interruppted = true;
     auto body = std::vector(&data[1], &data[data.size()]);
     deserialize(body, vm);
